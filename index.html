@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpeedFulfill — Campaign Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0A3D5C;--cyan:#04C5FE;--dcyan:#04A9D9;--lcyan:#E0F9FF;
+  --green:#1D9E75;--red:#E24B4A;--amber:#BA7517;--blue:#378ADD;
+  --bg:#F4FAFE;--surface:#FFFFFF;--border:rgba(10,61,92,0.12);
+  --text:#0D1F2D;--muted:#5A7A8A;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-logo-mark{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:34px;height:34px;background:var(--cyan);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:20px;height:20px}
+.wordmark{color:#fff;font-size:15px;font-weight:500}
+.wordmark span{color:var(--cyan)}
+.sidebar-nav{flex:1;padding:14px 12px}
+.nav-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:0 8px;margin-bottom:6px;margin-top:14px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:rgba(255,255,255,0.55);cursor:pointer;font-size:13px;border:none;background:none;width:100%;text-align:left;transition:all .15s}
+.nav-item i{font-size:17px}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff}
+.nav-item.active{background:rgba(4,197,254,0.15);color:var(--cyan);border-left:2px solid var(--cyan);padding-left:8px}
+.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,0.08)}
+.sheet-link{display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(4,197,254,0.1);border:1px solid rgba(4,197,254,0.2);border-radius:8px;color:var(--cyan);font-size:12px;text-decoration:none;transition:all .15s;margin-bottom:8px}
+.sheet-link:hover{background:rgba(4,197,254,0.2)}
+.sheet-link i{font-size:15px}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.35);padding:0 2px}
+.sdot{width:6px;height:6px;border-radius:50%;background:#555;flex-shrink:0;transition:all .3s}
+.sdot.live{background:var(--cyan);box-shadow:0 0 0 3px rgba(4,197,254,0.2)}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:15px;font-weight:500;margin-right:6px}
+.topbar select,.topbar input[type=date]{font-family:var(--sans);font-size:12px;padding:5px 9px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);height:30px;outline:none}
+.topbar select:focus,.topbar input:focus{border-color:var(--cyan)}
+.fl{font-size:11px;color:var(--muted)}
+.btn{font-family:var(--sans);font-size:12px;padding:5px 13px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:30px;transition:all .15s}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-primary{background:var(--navy);border:none;color:#fff}
+.btn-primary:hover{background:var(--dcyan)}
+.btn-danger{background:transparent;border:1px solid var(--red);color:var(--red)}
+.mla{margin-left:auto}
+.content{padding:22px 24px;flex:1}
+.pane{display:none}.pane.active{display:block}
+.sec-label{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:22px}
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;border-top:3px solid var(--ac)}
+.mcard-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:7px}
+.mcard-val{font-family:var(--mono);font-size:23px;font-weight:500;line-height:1}
+.mcard-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.mcard-sub.good{color:var(--green)}.mcard-sub.warn{color:var(--amber)}.mcard-sub.bad{color:var(--red)}
+.chart-main{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.cbox{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.ctitle{font-size:13px;font-weight:500;margin-bottom:3px}
+.csub{font-size:11px;color:var(--muted);margin-bottom:10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.ll{width:18px;height:2px;border-radius:2px}
+.ls{width:9px;height:9px;border-radius:2px}
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+th{padding:9px 12px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;overflow:hidden}
+td{padding:9px 12px;border-bottom:1px solid rgba(10,61,92,0.05);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--lcyan)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-family:var(--mono);font-size:11px;font-weight:500}
+.good{background:#E1F5EE;color:#085041}.warn{background:#FAEEDA;color:#633806}.bad{background:#FCEBEB;color:#791F1F}.neu{background:var(--bg);color:var(--muted)}
+.erow td{text-align:center;padding:44px;color:var(--muted)}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.scard h3{font-size:13px;font-weight:500;margin-bottom:4px}
+.scard p{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.scard input[type=url],.scard input[type=text]{width:100%;font-family:var(--mono);font-size:12px;padding:7px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;margin-bottom:8px}
+.scard input:focus{border-color:var(--cyan)}
+.scard select{font-family:var(--sans);font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none}
+.irow{display:flex;gap:8px;align-items:flex-start}
+.irow input{flex:1;margin-bottom:0}
+.sstatus{font-size:11px;color:var(--muted);margin-top:6px;min-height:16px}
+.code{font-family:var(--mono);font-size:11px;background:var(--bg);padding:2px 6px;border-radius:4px;border:0.5px solid var(--border)}
+.resp-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.resp-filters select,.resp-filters input{font-family:var(--sans);font-size:12px;padding:5px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);height:30px;outline:none}
+.resp-filters select:focus,.resp-filters input:focus{border-color:var(--cyan)}
+.resp-scards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.rsc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.rsc-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+.rsc-val{font-size:22px;font-weight:500;font-family:var(--mono)}
+.rcards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:11px;border-left:3px solid var(--rac)}
+.rcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.rcard-name{font-size:13px;font-weight:500;line-height:1.3}
+.rcard-email{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
+.div{height:0.5px;background:var(--border)}
+.meta-row{display:flex;gap:6px;align-items:flex-start}
+.ml{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);min-width:62px;flex-shrink:0;padding-top:1px}
+.mv{font-size:12px;color:var(--text);line-height:1.5}
+.mv.sm{font-size:11px;line-height:1.6}
+.mv.mu{color:var(--muted)}
+.cpill{font-size:11px;background:var(--bg);border:0.5px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--muted);display:inline-block;line-height:1.4}
+.dval{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.rempty{text-align:center;padding:48px;color:var(--muted);font-size:13px;grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a class="sidebar-logo-mark" href="#">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 16 L12 5 L21 8 L19 18 Z" fill="white" opacity="0.9"/>
+          <path d="M19 8 L24 11 L22 18 L19 18 Z" fill="rgba(255,255,255,0.5)"/>
+          <line x1="1" y1="13" x2="8" y2="13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="0" y1="16" x2="7" y2="16" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="wordmark">Speed<span>Fulfill</span></span>
+    </a>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Campaigns</div>
+    <button class="nav-item active" onclick="switchTab('overview')"><i class="ti ti-chart-line"></i>Overview</button>
+    <button class="nav-item" onclick="switchTab('table')"><i class="ti ti-table"></i>Campaign table</button>
+    <div class="nav-label">Leads</div>
+    <button class="nav-item" onclick="switchTab('responses')"><i class="ti ti-messages"></i>Response tracker</button>
+    <div class="nav-label">Admin</div>
+    <button class="nav-item" onclick="switchTab('settings')"><i class="ti ti-settings"></i>Settings</button>
+  </nav>
+  <div class="sidebar-footer">
+    <a id="sheetBtn" class="sheet-link" href="https://docs.google.com/spreadsheets/d/1QICgjLY4eeqAETIFhZRvKHFHAOOArHDnhE6Zzr6JE_I/edit" target="_blank" rel="noopener">
+      <i class="ti ti-external-link"></i>Open Google Sheet
+    </a>
+    <div class="status-pill">
+      <span class="sdot" id="sdot"></span>
+      <span id="stext">Not connected</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="pageTitle">Overview</span>
+    <span class="fl">Segment</span>
+    <select id="fSeg" onchange="render()"><option value="">All</option></select>
+    <span class="fl">Type</span>
+    <select id="fType" onchange="render()"><option value="">All</option></select>
+    <span class="fl">From</span>
+    <input type="date" id="fFrom" onchange="render()">
+    <span class="fl">To</span>
+    <input type="date" id="fTo" onchange="render()">
+    <button class="btn btn-ghost mla" onclick="loadAll()"><i class="ti ti-refresh"></i>Refresh</button>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="pane active" id="pane-overview">
+      <div class="sec-label">Campaign performance summary</div>
+      <div class="cards-grid">
+        <div class="mcard" style="--ac:var(--cyan)"><div class="mcard-label">Campaigns</div><div class="mcard-val" id="cTotal">—</div><div class="mcard-sub" id="cTotalS">total loaded</div></div>
+        <div class="mcard" style="--ac:var(--navy)"><div class="mcard-label">Avg open rate</div><div class="mcard-val" id="cOpen">—</div><div class="mcard-sub" id="cOpenS">target &gt; 30%</div></div>
+        <div class="mcard" style="--ac:var(--dcyan)"><div class="mcard-label">Avg reply rate</div><div class="mcard-val" id="cReply">—</div><div class="mcard-sub" id="cReplyS">target &gt; 3%</div></div>
+        <div class="mcard" style="--ac:var(--green)"><div class="mcard-label">Avg click rate</div><div class="mcard-val" id="cClick">—</div><div class="mcard-sub">across campaigns</div></div>
+        <div class="mcard" style="--ac:var(--red)"><div class="mcard-label">Avg bounce rate</div><div class="mcard-val" id="cBounce">—</div><div class="mcard-sub" id="cBounceS">target &lt; 5%</div></div>
+        <div class="mcard" style="--ac:#185FA5"><div class="mcard-label">Booked calls</div><div class="mcard-val" id="cCalls">—</div><div class="mcard-sub">total conversions</div></div>
+      </div>
+      <div class="chart-main">
+        <div class="ctitle">Rate comparison across campaigns</div>
+        <div class="csub">Open rate, reply rate, and click rate — chronological</div>
+        <div class="legend">
+          <span class="li"><span class="ll" style="background:var(--navy)"></span>Open rate</span>
+          <span class="li"><span class="ll" style="background:var(--cyan);border-top:2px dashed var(--cyan);height:0"></span>Reply rate</span>
+          <span class="li"><span class="ll" style="background:var(--green)"></span>Click rate</span>
+          <span class="li"><span class="ll" style="background:#bbb;border-top:2px dashed #bbb;height:0"></span>Avg open</span>
+        </div>
+        <div style="position:relative;height:290px"><canvas id="chartMain" role="img" aria-label="Line chart open reply click rates">Rate comparison.</canvas></div>
+      </div>
+      <div class="charts-row">
+        <div class="cbox">
+          <div class="ctitle">Leads sent vs booked calls</div>
+          <div class="legend"><span class="li"><span class="ls" style="background:var(--dcyan)"></span>Leads sent</span><span class="li"><span class="ls" style="background:#185FA5"></span>Booked calls</span></div>
+          <div style="position:relative;height:210px"><canvas id="chartVol" role="img" aria-label="Leads vs calls">Leads vs calls.</canvas></div>
+        </div>
+        <div class="cbox">
+          <div class="ctitle">Bounce rate per campaign</div>
+          <div class="legend"><span class="li"><span class="ls" style="background:var(--dcyan)"></span>Within target</span><span class="li"><span class="ls" style="background:var(--red)"></span>Above 5%</span></div>
+          <div style="position:relative;height:210px"><canvas id="chartBounce" role="img" aria-label="Bounce rates">Bounce rates.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="pane" id="pane-table">
+      <div class="sec-label">All campaigns</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:22%">Campaign</th><th style="width:13%">Segment / Type</th>
+            <th style="width:9%">Date</th><th style="width:7%">Leads</th>
+            <th style="width:9%">Open rate</th><th style="width:9%">Reply rate</th>
+            <th style="width:9%">Click rate</th><th style="width:9%">Bounce rate</th>
+            <th style="width:7%">Calls</th><th style="width:6%">Status</th>
+          </tr></thead>
+          <tbody id="tBody"><tr class="erow"><td colspan="10">No data loaded. Connect your sheet in Settings.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RESPONSES -->
+    <div class="pane" id="pane-responses">
+      <div class="sec-label">Reply activity</div>
+      <div class="resp-scards">
+        <div class="rsc"><div class="rsc-label">Total replies</div><div class="rsc-val" id="rTotal">—</div></div>
+        <div class="rsc"><div class="rsc-label">Interested</div><div class="rsc-val" style="color:var(--green)" id="rInt">—</div></div>
+        <div class="rsc"><div class="rsc-label">Not interested</div><div class="rsc-val" style="color:var(--red)" id="rNot">—</div></div>
+        <div class="rsc"><div class="rsc-label">Pending action</div><div class="rsc-val" style="color:var(--blue)" id="rPend">—</div></div>
+      </div>
+      <div class="resp-filters">
+        <span class="fl">Status</span>
+        <select id="rfStatus" onchange="renderResponses()">
+          <option value="">All statuses</option>
+          <option>Interested</option><option>Not Interested</option>
+          <option>Lead</option><option>Not Intereted</option><option>Out of Office</option>
+        </select>
+        <span class="fl">Campaign</span>
+        <select id="rfCampaign" onchange="renderResponses()"><option value="">All campaigns</option></select>
+        <span class="fl">Search</span>
+        <input type="text" id="rfSearch" placeholder="Name, email, company..." oninput="renderResponses()" style="width:175px">
+      </div>
+      <div class="rcards-grid" id="rcards">
+        <div class="rempty"><i class="ti ti-inbox" style="font-size:22px;display:block;margin:0 auto 8px" aria-hidden="true"></i>No responses loaded. Connect the Response Tracker URL in Settings.</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="pane" id="pane-settings">
+      <div class="sec-label">Connection & preferences</div>
+
+      <div class="scard">
+        <h3>Dashboard tab — CSV URL</h3>
+        <p>Publish your <strong>Dashboard</strong> tab as CSV and paste the URL here. This powers the Overview and Campaign Table.<br>
+        Expected columns: <span class="code">Status, Campaign, Segment, Launch Date, Leads Sent, Open Rate, Reply Rate, Click Rate, Bounce Rate, Booked Calls</span></p>
+        <div class="irow">
+          <input type="url" id="dashUrl" placeholder="https://docs.google.com/spreadsheets/.../pub?gid=...&output=csv">
+          <button class="btn btn-primary" onclick="saveDashUrl()"><i class="ti ti-plug"></i>Connect</button>
+        </div>
+        <div class="sstatus" id="dashStatus"></div>
+      </div>
+
+      <div class="scard">
+        <h3>Response Tracker tab — CSV URL</h3>
+        <p>Publish your <strong>Response Tracker</strong> tab as CSV and paste the URL here. This powers the Response Tracker view.<br>
+        Expected columns: <span class="code">Lead Name, Email, Company, Campaign, Status, Response Date, Response, Next Step</span></p>
+        <div class="irow">
+          <input type="url" id="respUrl" placeholder="https://docs.google.com/spreadsheets/.../pub?gid=...&output=csv">
+          <button class="btn btn-primary" onclick="saveRespUrl()"><i class="ti ti-plug"></i>Connect</button>
+        </div>
+        <div class="sstatus" id="respStatus"></div>
+      </div>
+
+      <div class="scard">
+        <h3>Google Sheet link</h3>
+        <p>The sidebar button links directly to your sheet. Update if the URL changes.</p>
+        <div class="irow">
+          <input type="url" id="sheetEditUrl" value="https://docs.google.com/spreadsheets/d/1QICgjLY4eeqAETIFhZRvKHFHAOOArHDnhE6Zzr6JE_I/edit">
+          <button class="btn btn-primary" onclick="saveSheetLink()"><i class="ti ti-check"></i>Save</button>
+        </div>
+      </div>
+
+      <div class="scard">
+        <h3>Auto-refresh</h3>
+        <p>Automatically reload data from both sheets at a set interval.</p>
+        <select id="refreshInt" onchange="setRefresh()">
+          <option value="0">Off</option>
+          <option value="60" selected>Every 60 seconds</option>
+          <option value="300">Every 5 minutes</option>
+          <option value="600">Every 10 minutes</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let campData = JSON.parse(localStorage.getItem('sf_camp') || '[]');
+let respData = JSON.parse(localStorage.getItem('sf_resp') || '[]');
+let cMain, cVol, cBounce, refreshTimer;
+
+const num  = v => isNaN(+v) ? 0 : +(+v);
+const pct  = v => isNaN(+v)||v==='' ? '—' : (+v).toFixed(1)+'%';
+const avg  = (a,k) => a.length ? a.reduce((s,r)=>s+num(r[k]),0)/a.length : NaN;
+const trim = (s,n=22) => s&&s.length>n ? s.slice(0,n)+'…' : (s||'—');
+
+function scls(m,v){
+  if(m==='open')   return num(v)>=30?'good':num(v)>=20?'warn':'bad';
+  if(m==='reply')  return num(v)>=3 ?'good':num(v)>=1 ?'warn':'bad';
+  if(m==='bounce') return num(v)<=5 ?'good':num(v)<=8 ?'warn':'bad';
+  return 'neu';
+}
+
+function getFiltered(){
+  const seg=document.getElementById('fSeg').value;
+  const typ=document.getElementById('fType').value;
+  const fr=document.getElementById('fFrom').value;
+  const to=document.getElementById('fTo').value;
+  return campData.filter(r=>{
+    if(seg && r.segment!==seg) return false;
+    if(typ && r.type!==typ)    return false;
+    if(fr  && r.date && r.date<fr) return false;
+    if(to  && r.date && r.date>to) return false;
+    return true;
+  });
+}
+
+function populateFilters(){
+  const segs=[...new Set(campData.map(r=>r.segment).filter(Boolean))];
+  const typs=[...new Set(campData.map(r=>r.type).filter(Boolean))];
+  const fs=document.getElementById('fSeg'), ft=document.getElementById('fType');
+  const sv=fs.value, tv=ft.value;
+  fs.innerHTML='<option value="">All</option>'+segs.map(s=>`<option${s===sv?' selected':''}>${s}</option>`).join('');
+  ft.innerHTML='<option value="">All</option>'+typs.map(t=>`<option${t===tv?' selected':''}>${t}</option>`).join('');
+}
+
+function updateCards(d){
+  document.getElementById('cTotal').textContent = d.length||'—';
+  const oa=avg(d,'openRate'), ra=avg(d,'replyRate'), ba=avg(d,'bounceRate');
+  document.getElementById('cOpen').textContent   = pct(oa);
+  document.getElementById('cReply').textContent  = pct(ra);
+  document.getElementById('cClick').textContent  = pct(avg(d,'clickRate'));
+  document.getElementById('cBounce').textContent = pct(ba);
+  document.getElementById('cCalls').textContent  = d.length ? d.reduce((a,r)=>a+num(r.calls),0) : '—';
+  const ss=(id,cls,txt)=>{const el=document.getElementById(id);el.className='mcard-sub '+cls;el.textContent=txt;};
+  if(!isNaN(oa)) ss('cOpenS',  scls('open',oa),   oa>=30  ?'✓ On target':'Below target');
+  if(!isNaN(ra)) ss('cReplyS', scls('reply',ra),  ra>=3   ?'✓ On target':'Below target');
+  if(!isNaN(ba)) ss('cBounceS',scls('bounce',ba), ba<=5   ?'✓ On target':'Above target');
+}
+
+function buildCharts(d){
+  if(cMain)   {cMain.destroy();   cMain=null;}
+  if(cVol)    {cVol.destroy();    cVol=null;}
+  if(cBounce) {cBounce.destroy(); cBounce=null;}
+  const labels = d.map(r=>trim(r.campaign,16));
+  const od=d.map(r=>num(r.openRate)), rd=d.map(r=>num(r.replyRate)), cd=d.map(r=>num(r.clickRate));
+  const aO=od.length?+(od.reduce((a,v)=>a+v,0)/od.length).toFixed(2):0;
+  const bOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:38},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'},beginAtZero:true}},elements:{point:{radius:4,hoverRadius:6,borderWidth:2}}};
+  cMain=new Chart(document.getElementById('chartMain'),{type:'line',data:{labels,datasets:[
+    {label:'Open rate', data:od, borderColor:'#0A3D5C',backgroundColor:'rgba(10,61,92,0.05)',  tension:.35,fill:true,pointBackgroundColor:'#0A3D5C',pointStyle:'circle'},
+    {label:'Reply rate',data:rd, borderColor:'#04C5FE',backgroundColor:'rgba(4,197,254,0.05)', tension:.35,fill:true,pointBackgroundColor:'#04C5FE',pointStyle:'triangle',borderDash:[5,3]},
+    {label:'Click rate',data:cd, borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.05)',tension:.35,fill:true,pointBackgroundColor:'#1D9E75',pointStyle:'rect'},
+    {label:'Avg open',  data:Array(d.length).fill(aO),borderColor:'#bbb',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+  ]},options:{...bOpts,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}}}});
+  const bo2={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:38},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'},beginAtZero:true}}};
+  cVol=new Chart(document.getElementById('chartVol'),{type:'bar',data:{labels,datasets:[
+    {label:'Leads',data:d.map(r=>num(r.leads)),backgroundColor:'#04A9D9',borderRadius:4},
+    {label:'Calls', data:d.map(r=>num(r.calls)),backgroundColor:'#185FA5',borderRadius:4}
+  ]},options:bo2});
+  cBounce=new Chart(document.getElementById('chartBounce'),{type:'bar',data:{labels,datasets:[
+    {label:'Bounce',data:d.map(r=>num(r.bounceRate)),backgroundColor:d.map(r=>num(r.bounceRate)>5?'#E24B4A':'#04A9D9'),borderRadius:4}
+  ]},options:{...bo2,scales:{...bo2.scales,y:{...bo2.scales.y,ticks:{font:{size:10},callback:v=>v+'%'}}}}});
+}
+
+function renderTable(d){
+  const tb=document.getElementById('tBody');
+  if(!d.length){tb.innerHTML='<tr class="erow"><td colspan="10">No data for current filters.</td></tr>';return;}
+  tb.innerHTML=d.map(r=>{
+    const ob=scls('open',r.openRate), rb=scls('reply',r.replyRate), bb=scls('bounce',r.bounceRate);
+    const sb=r.status==='Completed'?'good':r.status==='Active'?'warn':'neu';
+    return `<tr>
+      <td style="font-weight:500" title="${r.campaign||''}">${trim(r.campaign,26)}</td>
+      <td>${trim(r.segment||r.type,18)}</td>
+      <td style="font-family:var(--mono)">${r.date||'—'}</td>
+      <td style="font-family:var(--mono)">${r.leads||'—'}</td>
+      <td><span class="badge ${ob}">${pct(num(r.openRate))}</span></td>
+      <td><span class="badge ${rb}">${pct(num(r.replyRate))}</span></td>
+      <td style="font-family:var(--mono)">${pct(num(r.clickRate))}</td>
+      <td><span class="badge ${bb}">${pct(num(r.bounceRate))}</span></td>
+      <td style="font-family:var(--mono);font-weight:500">${r.calls||0}</td>
+      <td><span class="badge ${sb}">${r.status||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function render(){
+  populateFilters();
+  const f=getFiltered();
+  updateCards(f);
+  if(f.length) buildCharts(f);
+  renderTable(f);
+}
+
+function badgeCls(s){
+  const sl=(s||'').toLowerCase();
+  if(sl==='interested') return {cls:'good',rac:'#1D9E75',abg:'#E1F5EE',atx:'#085041'};
+  if(sl.includes('not interested')||sl.includes('not intereted')) return {cls:'bad',rac:'#E24B4A',abg:'#FCEBEB',atx:'#791F1F'};
+  if(sl==='lead') return {cls:'neu',rac:'#378ADD',abg:'#E6F1FB',atx:'#0C447C'};
+  return {cls:'neu',rac:'var(--border)',abg:'var(--bg)',atx:'var(--muted)'};
+}
+
+function initials(n){
+  if(!n||n==='—') return '?';
+  return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+}
+
+function updateRespCards(rows){
+  document.getElementById('rTotal').textContent = rows.length||'—';
+  document.getElementById('rInt').textContent   = rows.filter(r=>(r.status||'').toLowerCase()==='interested').length;
+  document.getElementById('rNot').textContent   = rows.filter(r=>(r.status||'').toLowerCase().includes('not interest')).length;
+  document.getElementById('rPend').textContent  = rows.filter(r=>['lead'].includes((r.status||'').toLowerCase())).length;
+}
+
+function populateRespFilters(){
+  const camps=[...new Set(respData.map(r=>r.campaign).filter(Boolean))];
+  const sel=document.getElementById('rfCampaign'), cur=sel.value;
+  sel.innerHTML='<option value="">All campaigns</option>'+camps.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function renderResponses(){
+  const status=document.getElementById('rfStatus').value.toLowerCase();
+  const campaign=document.getElementById('rfCampaign').value;
+  const search=document.getElementById('rfSearch').value.toLowerCase();
+  const filtered=respData.filter(r=>{
+    if(status && !(r.status||'').toLowerCase().includes(status)) return false;
+    if(campaign && r.campaign!==campaign) return false;
+    if(search && !`${r.name} ${r.email} ${r.company}`.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  updateRespCards(filtered);
+  const grid=document.getElementById('rcards');
+  if(!filtered.length){
+    grid.innerHTML='<div class="rempty"><i class="ti ti-inbox" style="font-size:22px;display:block;margin:0 auto 8px" aria-hidden="true"></i>No replies match the current filters.</div>';
+    return;
+  }
+  grid.innerHTML=filtered.map(r=>{
+    const {cls,rac,abg,atx}=badgeCls(r.status);
+    const ini=initials(r.name);
+    return `<div class="rcard" style="--rac:${rac}">
+      <div class="rcard-top">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <div class="avatar" style="background:${abg};color:${atx}">${ini}</div>
+          <div style="min-width:0">
+            <div class="rcard-name">${r.name||'—'}</div>
+            <div class="rcard-email" title="${r.email||''}">${r.email||'—'}</div>
+          </div>
+        </div>
+        <span class="badge ${cls}" style="flex-shrink:0">${r.status||'—'}</span>
+      </div>
+      <div class="div"></div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${r.company&&r.company!=='—'?`<div class="meta-row"><span class="ml">Company</span><span class="mv">${r.company}</span></div>`:''}
+        <div class="meta-row"><span class="ml">Campaign</span><span class="cpill">${r.campaign||'—'}</span></div>
+        <div class="meta-row"><span class="ml">Date</span><span class="dval">${r.date||'—'}</span></div>
+      </div>
+      <div class="div"></div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div class="meta-row"><span class="ml">Response</span><span class="mv sm mu">${r.response||'—'}</span></div>
+        <div class="meta-row"><span class="ml">Next step</span><span class="mv sm">${r.next||'—'}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchCSV(url, label, statusId){
+  const el=document.getElementById(statusId);
+  if(!url){if(el)el.textContent='No URL set.';return null;}
+  if(el) el.textContent='Loading...';
+  try{
+    const res=await fetch(url+(url.includes('?')?'&':'?')+'nocache='+Date.now());
+    const txt=await res.text();
+    const rows=txt.trim().split('\n').map(r=>r.split(',').map(c=>c.replace(/^"|"$/g,'').trim()));
+    if(el) el.textContent=`✓ Loaded ${rows.length-1} rows from ${label}.`;
+    return rows;
+  }catch(e){
+    if(el) el.textContent=`✗ Could not load ${label}. Check the URL is published publicly as CSV.`;
+    return null;
+  }
+}
+
+async function loadCampaigns(){
+  const url=(localStorage.getItem('sf_dash_url')||'').trim();
+  const rows=await fetchCSV(url,'Dashboard','dashStatus');
+  if(!rows) return;
+  const hdr=rows[0].map(h=>h.toLowerCase().trim());
+  // Exact match first, fallback to includes
+  const exact=k=>hdr.findIndex(h=>h===k.toLowerCase());
+  const fuzzy=k=>hdr.findIndex(h=>h.includes(k.toLowerCase()));
+  const col=k=>{ const e=exact(k); return e>=0?e:fuzzy(k); };
+  const iSt=col('status'),iC=col('campaign'),iS=col('segment'),iD=col('launch date'),
+        iL=col('leads sent'),iO=col('open rate'),iR=col('reply rate'),
+        iCl=col('click rate'),iB=col('bounce rate'),iCa=col('booked calls');
+  campData=rows.slice(1).filter(r=>r[iC]&&r[iC].trim()!=='').map(r=>({
+    status:    iSt>=0?r[iSt]||'':'',
+    campaign:  r[iC]||'',
+    segment:   iS>=0?r[iS]||'':'',
+    type:      iS>=0?r[iS]||'':'',
+    date:      iD>=0?r[iD]||'':'',
+    leads:     iL>=0?r[iL]||'0':'0',
+    openRate:  iO>=0?(r[iO]||'0').replace('%',''):'0',
+    replyRate: iR>=0?(r[iR]||'0').replace('%',''):'0',
+    clickRate: iCl>=0?(r[iCl]||'0').replace('%',''):'0',
+    bounceRate:iB>=0?(r[iB]||'0').replace('%',''):'0',
+    calls:     iCa>=0?parseInt(r[iCa]||'0')||0:0,
+  }));
+  localStorage.setItem('sf_camp',JSON.stringify(campData));
+}
+
+async function loadResponses(){
+  const url=(localStorage.getItem('sf_resp_url')||'').trim();
+  const rows=await fetchCSV(url,'Response Tracker','respStatus');
+  if(!rows) return;
+  const hdr=rows[0].map(h=>h.toLowerCase().trim());
+  const idx=k=>hdr.findIndex(h=>h.includes(k));
+  const iN=idx('name'),iE=idx('email'),iCo=idx('company'),iCa=idx('campaign'),
+        iSt=idx('status'),iD=idx('date'),iR=idx('response'),iNx=idx('next');
+  respData=rows.slice(1).filter(r=>{
+    const e=(r[iE]||'').trim(),s=(iSt>=0?(r[iSt]||''):'').trim(),n=(iN>=0?(r[iN]||''):'').trim();
+    if(!e&&!n&&!s) return false;
+    if(r.every(c=>!c||c.trim()==='')) return false;
+    return true;
+  }).map(r=>({
+    name:     iN>=0?r[iN]||'—':'—',
+    email:    iE>=0?r[iE]||'':'',
+    company:  iCo>=0?r[iCo]||'—':'—',
+    campaign: iCa>=0?r[iCa]||'—':'—',
+    status:   iSt>=0?r[iSt]||'':'',
+    date:     iD>=0?r[iD]||'':'',
+    response: iR>=0?r[iR]||'':'',
+    next:     iNx>=0?r[iNx]||'':'',
+  }));
+  localStorage.setItem('sf_resp',JSON.stringify(respData));
+  populateRespFilters();
+  renderResponses();
+}
+
+async function loadAll(){
+  await loadCampaigns();
+  await loadResponses();
+  render();
+  updateStatus();
+}
+
+function updateStatus(){
+  const dot=document.getElementById('sdot');
+  const txt=document.getElementById('stext');
+  if(campData.length||respData.length){
+    dot.classList.add('live');
+    txt.textContent=`Live · ${campData.length} campaigns · ${respData.length} replies`;
+  }
+}
+
+function saveDashUrl(){
+  const url=document.getElementById('dashUrl').value.trim();
+  if(!url){document.getElementById('dashStatus').textContent='Please enter a URL.';return;}
+  localStorage.setItem('sf_dash_url',url);
+  loadCampaigns().then(()=>{render();updateStatus();});
+}
+
+function saveRespUrl(){
+  const url=document.getElementById('respUrl').value.trim();
+  if(!url){document.getElementById('respStatus').textContent='Please enter a URL.';return;}
+  localStorage.setItem('sf_resp_url',url);
+  loadResponses().then(()=>updateStatus());
+}
+
+function saveSheetLink(){
+  const url=document.getElementById('sheetEditUrl').value.trim();
+  if(url){document.getElementById('sheetBtn').href=url;localStorage.setItem('sf_sheet_link',url);}
+}
+
+function setRefresh(){
+  if(refreshTimer) clearInterval(refreshTimer);
+  const s=parseInt(document.getElementById('refreshInt').value);
+  if(s>0) refreshTimer=setInterval(loadAll,s*1000);
+}
+
+const TAB_TITLES={overview:'Overview',table:'Campaign table',responses:'Response tracker',settings:'Settings'};
+function switchTab(t){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>{if((el.getAttribute('onclick')||'').includes(`'${t}'`))el.classList.add('active');});
+  document.querySelectorAll('.pane').forEach(el=>el.classList.remove('active'));
+  document.getElementById('pane-'+t).classList.add('active');
+  document.getElementById('pageTitle').textContent=TAB_TITLES[t]||t;
+  if(t==='overview'&&getFiltered().length) buildCharts(getFiltered());
+  if(t==='responses'){populateRespFilters();renderResponses();}
+}
+
+(function init(){
+  const du=localStorage.getItem('sf_dash_url');
+  const ru=localStorage.getItem('sf_resp_url');
+  const sl=localStorage.getItem('sf_sheet_link');
+  if(du) document.getElementById('dashUrl').value=du;
+  if(ru) document.getElementById('respUrl').value=ru;
+  if(sl){document.getElementById('sheetEditUrl').value=sl;document.getElementById('sheetBtn').href=sl;}
+  if(campData.length||respData.length){
+    populateFilters();populateRespFilters();render();renderResponses();updateStatus();
+  }
+  if(du||ru) loadAll();
+  setRefresh();
+})();
+</script>
+</body>
+</html>
